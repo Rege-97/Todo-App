@@ -1,10 +1,15 @@
 package com.example.todo.config;
 
+import com.example.todo.security.JwtAuthenticationEntryPoint;
+import com.example.todo.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -12,8 +17,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     // 스프링 시큐리티에서 요청이 들어올 때 거치는 보안 필터 묶음
     @Bean
@@ -21,9 +29,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())   // CSRF 공격방지 기능 비활성화(JWT 기반이므로)
                 .cors(Customizer.withDefaults())    // CORS 정책 허용 기능 활성화(규칙은 아래 메서드에서 정의)
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))    // 커스텀 인증 예외처리 등록
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   // 세션 비저장 설정(JWT로 할것이기 때문)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)   // JWT 필터 추가 (기본 로그인 필터 실행 전 JWT 필터 실행)
                 .authorizeHttpRequests(auth -> auth //URL별 접근 권한 설정
-                        .requestMatchers("/health").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/health", "/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()   // 나머지는 인증 필요
                 );
         return http.build();
     }

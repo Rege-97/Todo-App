@@ -8,13 +8,18 @@ import com.example.todo.dto.response.UserResponseDTO;
 import com.example.todo.mapper.UserMapper;
 import com.example.todo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {    // 인증 검증을 위해 UserDetailsService 인터페이스 상속
 
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -50,4 +55,20 @@ public class UserService {
         return new TokenResponseDTO(token, "Bearer", 3600000L);
     }
 
+    // 회원 디테일 정보 메서드
+    // 직접 호출하지 않고 스프링 시큐리티가 자동으로 인증이 필요할 때 메서드 호출
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userMapper.findByEmail(email);
+        if(user == null) {
+            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email);
+        }
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),    // username
+                user.getPassword(), // password
+                Collections.emptyList() // role(권한)
+        );
+    }
 }
