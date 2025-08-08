@@ -1,7 +1,9 @@
 package com.example.todo.controller;
 
 import com.example.todo.common.ApiResponseDTO;
+import com.example.todo.dto.request.LoginRequestDTO;
 import com.example.todo.dto.request.RegisterRequestDTO;
+import com.example.todo.dto.response.TokenResponseDTO;
 import com.example.todo.dto.response.UserResponseDTO;
 import com.example.todo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +39,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDTO req) {
         UserResponseDTO res = userService.register(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success(201, "회원가입 성공", res));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success(HttpStatus.CREATED.value(), "회원가입 성공", res));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO req) {
+        TokenResponseDTO res = userService.login(req);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "로그인 성공", res));
     }
 }
