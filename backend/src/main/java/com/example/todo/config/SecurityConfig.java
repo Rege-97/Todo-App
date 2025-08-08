@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -27,7 +29,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())   // CSRF 공격방지 기능 비활성화(JWT 기반이므로)
+                .csrf(CsrfConfigurer::disable)  // CSRF 공격방지 기능 비활성화(JWT 기반이므로)
                 .cors(Customizer.withDefaults())    // CORS 정책 허용 기능 활성화(규칙은 아래 메서드에서 정의)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))    // 커스텀 인증 예외처리 등록
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   // 세션 비저장 설정(JWT로 할것이기 때문)
@@ -56,5 +58,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource(); // URL 패턴별로 서로 다른 CORS 설정을 적용할 수 있게 해주는 객체
         source.registerCorsConfiguration("/**", conf);  // registerCorsConfiguration(URL 패턴, CORS 설정 객체)
         return source; // 스프링 시큐리티가 CORS 규칙을 전역으로 적용
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -22,7 +22,7 @@ import java.util.Collections;
 public class UserService implements UserDetailsService {    // 인증 검증을 위해 UserDetailsService 인터페이스 상속
 
     private final UserMapper userMapper;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
