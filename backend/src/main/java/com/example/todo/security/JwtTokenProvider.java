@@ -1,5 +1,6 @@
 package com.example.todo.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -30,12 +31,17 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public String generateToken(String email) {
+    public String generateToken(Long id, String email) {
         Date now = new Date();  // 토큰 생성시간
         Date expiryDate = new Date(now.getTime() + expirationMs);   // 토큰 종료 시간
 
+        Claims claims = Jwts.claims()   // JWT에 직접 저장하는 신분증 같은 역할
+                .subject(email)  // 로그인 식별자 저장
+                .add("id", id)  // id 추가
+                .build();
+
         return Jwts.builder()
-                .subject(email) // 로그인 식별자 저장
+                .claims(claims) // 클레임 저장
                 .issuedAt(now)  // 발급 시각
                 .expiration(expiryDate) // 토큰 종료시간
                 .signWith(key)  // 서명

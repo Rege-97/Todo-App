@@ -100,14 +100,14 @@ public class UserServiceTest {
 
         when(userMapper.findByEmail(email)).thenReturn(fakeUser);
         when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
-        when(jwtTokenProvider.generateToken(email)).thenReturn("token");
+        when(jwtTokenProvider.generateToken(fakeUser.getId(), email)).thenReturn("token");
 
         // when
         userService.login(loginRequestDTO);
 
         // then
         verify(userMapper, times(1)).findByEmail(loginRequestDTO.getEmail());
-        verify(jwtTokenProvider, times(1)).generateToken(loginRequestDTO.getEmail());
+        verify(jwtTokenProvider, times(1)).generateToken(fakeUser.getId(), loginRequestDTO.getEmail());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class UserServiceTest {
         assertThrows(IllegalArgumentException.class, () -> userService.login(loginRequestDTO));
 
         // then
-        verify(jwtTokenProvider, never()).generateToken(loginRequestDTO.getEmail());
+        verify(jwtTokenProvider, never()).generateToken(anyLong(), loginRequestDTO.getEmail());
     }
 
     @Test
@@ -142,7 +142,7 @@ public class UserServiceTest {
 
         // then
         verify(passwordEncoder, never()).matches(any(), any());
-        verify(jwtTokenProvider, never()).generateToken(loginRequestDTO.getEmail());
+        verify(jwtTokenProvider, never()).generateToken(anyLong(), loginRequestDTO.getEmail());
     }
 
 }
