@@ -21,39 +21,38 @@ import java.util.List;
 public class TodoController {
 
     private final TodoService todoService;
-    private final SecurityUtil securityUtil;
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TodoRequestDTO req) {
-        long userId = securityUtil.getCurrentUserId();
+        long userId = SecurityUtil.getCurrentUserId();
         TodoResponseDTO createTodo = todoService.create(userId, req.getTitle());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success(HttpStatus.CREATED.value(), "투두 생성 성공", createTodo));
     }
 
     @GetMapping
     public ResponseEntity<?> getList() {
-        long userId = securityUtil.getCurrentUserId();
+        long userId = SecurityUtil.getCurrentUserId();
         List<TodoResponseDTO> todos = todoService.getList(userId);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "투두 목록 조회 성공", todos));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable long id) {
-        long userId = securityUtil.getCurrentUserId();
+        long userId = SecurityUtil.getCurrentUserId();
         TodoResponseDTO todos = todoService.get(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "투두 상세 조회 성공", todos));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable long id, @Valid @RequestBody TodoUpdateRequestDTO req) {
-        long userId = securityUtil.getCurrentUserId();
+        long userId = SecurityUtil.getCurrentUserId();
         TodoResponseDTO updateTodo = todoService.update(id, userId, req);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "투두 수정 성공", updateTodo));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable long id) {
-        long userId = securityUtil.getCurrentUserId();
+        long userId = SecurityUtil.getCurrentUserId();
         todoService.delete(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "투두 삭제 성공", null));
     }
