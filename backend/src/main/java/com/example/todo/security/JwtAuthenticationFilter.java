@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 //@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter { // 모든 요청에 대해 한번만 실행되는 필터를 만들 때 사용
     private final JwtTokenProvider jwtTokenProvider;
@@ -49,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 모든 �
             }
         } catch (Exception e) {
             // 서명 불일치 등은 그냥 인증 미설정으로 두고 다음 필터로
+            log.warn("Could not set user authentication in security context: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 
