@@ -5,6 +5,7 @@ import com.example.todo.dto.request.LoginRequestDTO;
 import com.example.todo.dto.request.RegisterRequestDTO;
 import com.example.todo.dto.response.TokenResponseDTO;
 import com.example.todo.dto.response.UserResponseDTO;
+import com.example.todo.exception.DuplicateEmailException;
 import com.example.todo.mapper.UserMapper;
 import com.example.todo.security.CustomUserDetails;
 import com.example.todo.security.JwtTokenProvider;
@@ -31,7 +32,7 @@ public class UserService implements UserDetailsService {    // 인증 검증을 
         // 이메일 중복체크
         User existed = userMapper.findByEmail(req.getEmail());
         if (existed != null) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new DuplicateEmailException("이미 사용 중인 이메일입니다.");
         }
 
         // 저장

@@ -23,10 +23,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error(HttpStatus.BAD_REQUEST.value(), errors));
     }
 
-    // 커스텀 IllegalArgumentException 처리 (예: 중복 이메일)
+    // 커스텀 DuplicateEmailException 처리 (409)
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleDuplicateEmailException(DuplicateEmailException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponseDTO.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    // IllegalArgumentException 처리 (예:  로그인 정보 불일치)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponseDTO.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
     // 인증 관련 IllegalStateException 처리 (401 Unauthorized)
