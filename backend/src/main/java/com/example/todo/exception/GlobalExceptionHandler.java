@@ -29,6 +29,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponseDTO.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
+    // 커스텀 TodoNotFoundException 처리
+    @ExceptionHandler(TodoNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleTodoNotFoundException(TodoNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
     // 그 외 모든 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleException(Exception ex) {
