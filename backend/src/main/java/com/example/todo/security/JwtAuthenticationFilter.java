@@ -48,7 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 모든 �
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // 서명 불일치 등은 그냥 인증 미설정으로 두고 다음 필터로
+            SecurityContextHolder.clearContext();
         }
 
         // 다음 필터로 요청 전달

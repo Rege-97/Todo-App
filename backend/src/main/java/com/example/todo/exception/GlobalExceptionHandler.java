@@ -29,6 +29,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponseDTO.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
+    // 인증 관련 IllegalStateException 처리 (401 Unauthorized)
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleIllegalStateException(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponseDTO.error(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+    }
+
     // 커스텀 TodoNotFoundException 처리
     @ExceptionHandler(TodoNotFoundException.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleTodoNotFoundException(TodoNotFoundException ex) {
