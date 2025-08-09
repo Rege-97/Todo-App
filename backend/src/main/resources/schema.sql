@@ -18,3 +18,13 @@ CREATE TABLE IF NOT EXISTS todos (
     completed_at TIMESTAMP NULL, -- 완료일
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+-- == 리프레시 토큰 테이블 ==
+-- 발급된 리프레시 토큰을 저장하여 추적하고 관리합니다.
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, -- 고유 식별자
+    user_id BIGINT NOT NULL UNIQUE, -- 어떤 사용자의 토큰인지 (한 사용자당 하나의 리프레시 토큰만 가짐)
+    token VARCHAR(255) NOT NULL, -- 발급된 리프레시 토큰 문자열
+    expiry_date TIMESTAMP NOT NULL, -- 토큰 만료일시
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );

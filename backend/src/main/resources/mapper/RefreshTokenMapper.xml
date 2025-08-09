@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.todo.mapper.RefreshTokenMapper">
+    <select
+            id="findByToken"
+            parameterType="string"
+            resultType="com.example.todo.domain.RefreshToken">
+        SELECT id, user_id, token, expiry_date
+        FROM refresh_tokens
+        WHERE token = #{token}
+    </select>
+
+    <select
+            id="findByUserId"
+            parameterType="long"
+            resultType="com.example.todo.domain.RefreshToken">
+        SELECT id, user_id, token, expiry_date
+        FROM refresh_tokens
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert
+            id="save"
+            parameterType="com.example.todo.domain.RefreshToken"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO refresh_tokens (user_id, token, expiry_date)
+        VALUES (#{userId}, #{token}, #{expiryDate})
+    </insert>
+
+    <update
+            id="update"
+            parameterType="com.example.todo.domain.RefreshToken">
+        UPDATE refresh_tokens
+        SET token = #{token}, expiry_date = #{expiryDate}
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete
+            id="deleteByUserId"
+            parameterType="long">
+        DELETE FROM refresh_tokens
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>
