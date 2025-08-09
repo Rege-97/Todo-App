@@ -10,10 +10,12 @@ import com.example.todo.service.TodoService;
 import com.example.todo.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,9 +34,13 @@ public class TodoController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getList(@RequestParam(defaultValue = "1") int page,
+                                     @RequestParam(defaultValue = "10") int size,
+                                     @RequestParam(required = false) String keyword,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         long userId = securityUtil.getCurrentUserId();
-        PageResponseDTO<TodoResponseDTO> todos = todoService.getList(userId, page, size);
+        PageResponseDTO<TodoResponseDTO> todos = todoService.getList(userId, page, size, keyword, startDate, endDate);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "투두 목록 조회 성공", todos));
     }
 

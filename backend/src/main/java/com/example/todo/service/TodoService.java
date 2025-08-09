@@ -11,6 +11,8 @@ import com.example.todo.mapper.TodoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,11 +32,11 @@ public class TodoService {
     }
 
     // 투두 목록 조회
-    public PageResponseDTO<TodoResponseDTO> getList(long userId, int page, int size) {
-        long totalElements = todoMapper.countByUserId(userId);
+    public PageResponseDTO<TodoResponseDTO> getList(long userId, int page, int size, String keyword, LocalDate startDate, LocalDate endDate) {
+        long totalElements = todoMapper.countByUserId(userId, keyword, startDate, endDate);
         int totalPages = (int) Math.ceil((double) totalElements / size);
         int offset = (page - 1) * size;
-        List<Todos> todos = todoMapper.findByUserId(userId, offset, size);
+        List<Todos> todos = todoMapper.findByUserId(userId, offset, size, keyword, startDate, endDate);
 
         List<TodoResponseDTO> doList = todos.stream()
                 .map(TodoResponseDTO::new)
@@ -58,6 +60,9 @@ public class TodoService {
         }
 
         if (req.getStatus() != null) {
+            if (req.getStatus() == TodoStatus.DONE && todos.getStatus() != TodoStatus.DONE) {
+                todos.setCompletedAt(LocalDateTime.now());
+            }
             todos.setStatus(req.getStatus());
         }
 

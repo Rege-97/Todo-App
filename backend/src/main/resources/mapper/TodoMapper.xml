@@ -15,9 +15,20 @@
     <select
             id="findByUserId"
             resultType="com.example.todo.domain.Todos">
-        SELECT id, user_id, title, status, created_at
+        SELECT id, user_id, title, status, created_at, completed_at
         FROM todos
-        WHERE user_id = #{userId}
+        <where>
+            user_id = #{userId}
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="startDate != null">
+                AND created_at >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND created_at &lt;= #{endDate}
+            </if>
+        </where>
         ORDER BY created_at DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
@@ -63,6 +74,17 @@
             resultType="long">
         SELECT COUNT(*)
         FROM todos
-        WHERE user_id = #{userId}
+        <where>
+            user_id = #{userId}
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="startDate != null">
+                AND created_at >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND created_at &lt;= #{endDate}
+            </if>
+        </where>
     </select>
 </mapper>

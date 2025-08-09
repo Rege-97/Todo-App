@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS todos (
     title VARCHAR(255) NOT NULL, -- 할 일의 내용 (예: "스프링 부트 공부하기")
     status VARCHAR(20) NOT NULL DEFAULT 'TODO', -- 할 일의 완료 여부 (기본값은 '미완료'인 false)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 할 일 생성일
+    completed_at TIMESTAMP NULL, -- 완료일
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
