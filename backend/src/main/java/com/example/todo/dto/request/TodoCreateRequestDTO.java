@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TodoRequestDTO {
+public class TodoCreateRequestDTO {
 
     @NotBlank
     private String title;

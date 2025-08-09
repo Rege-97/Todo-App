@@ -10,13 +10,12 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
 public class SecurityUtil {
 
     // Optional은 값이 있을 수도 있고 없을 수도 있는 상황에서 null 예외 방지를 위해 사용
 
     // 로그인된 유저 이메일 반환 메서드
-    public static Optional<String> getCurrentUserEmail() {
+    public Optional<String> getCurrentUserEmail() {
         // principal은 시큐리티에서 인증된 사용자를 나타내는 객체
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
@@ -28,7 +27,7 @@ public class SecurityUtil {
     }
 
     // 로그인된 유저 아이디 반환 메서드
-    public static long getCurrentUserId() {
+    public long getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof CustomUserDetails) {   // id 정보는 커스텀한 유저 디테일에 있으므로 커스텀 유저 디테일과 비교
             return ((CustomUserDetails) principal).getId();

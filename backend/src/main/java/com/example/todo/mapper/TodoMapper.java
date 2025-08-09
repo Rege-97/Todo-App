@@ -11,12 +11,14 @@ public interface TodoMapper {
 
     void insert(Todos todos);
 
-    List<Todos> findByUserId(@Param("userId") Long userId);
+    List<Todos> findByUserId(@Param("userId") Long userId, @Param("offset") int offset, @Param("size") int size);
 
     Todos findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     void update(Todos todos);
 
     void deleteByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    long countByUserId(@Param("userId") Long userId);
 
 }

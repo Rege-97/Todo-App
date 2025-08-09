@@ -3,6 +3,8 @@ package com.example.todo.service;
 import com.example.todo.domain.TodoStatus;
 import com.example.todo.domain.Todos;
 import com.example.todo.dto.request.TodoUpdateRequestDTO;
+import com.example.todo.dto.response.PageInfo;
+import com.example.todo.dto.response.PageResponseDTO;
 import com.example.todo.dto.response.TodoResponseDTO;
 import com.example.todo.exception.TodoNotFoundException;
 import com.example.todo.mapper.TodoMapper;
@@ -28,9 +30,17 @@ public class TodoService {
     }
 
     // 투두 목록 조회
-    public List<TodoResponseDTO> getList(long userId) {
-        List<Todos> todos = todoMapper.findByUserId(userId);
-        return todos.stream().map(TodoResponseDTO::new).collect(Collectors.toList());
+    public PageResponseDTO<TodoResponseDTO> getList(long userId, int page, int size) {
+        long totalElements = todoMapper.countByUserId(userId);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int offset = (page - 1) * size;
+        List<Todos> todos = todoMapper.findByUserId(userId, offset, size);
+
+        List<TodoResponseDTO> doList = todos.stream()
+                .map(TodoResponseDTO::new)
+                .collect(Collectors.toList());
+        PageInfo pageInfo = new PageInfo(page, size, totalElements, totalPages);
+        return new PageResponseDTO<>(doList, pageInfo);
     }
 
     // 투두 상세 조회
