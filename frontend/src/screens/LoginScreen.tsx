@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 import { RootStackParamList } from "../../App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = "http://172.30.1.55:8080";
 
@@ -34,12 +35,20 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
       const data = await response.json();
 
-      console.log("로그인 성공! 서버 응답: ", data);
-      Alert.alert("성공", "로그인에 성공했습니다!");
+      const accessToken = data.data.accessToken;
+      const refreshToken = data.data.refreshToken;
 
-      // TODO: 여기에 토큰 저장 로직 추가 예정
+      if (accessToken && refreshToken) {
+        await AsyncStorage.setItem("accessToken", accessToken);
+        await AsyncStorage.setItem("refreshToken", refreshToken);
 
-      navigation.navigate("Main");
+        console.log("토큰 저장 성공:", { accessToken, refreshToken });
+        Alert.alert("성공", "로그인에 성공했습니다!");
+        navigation.navigate("Main");
+      } else {
+        throw new Error("토큰을 받아오지 못했습니다.");
+      }
+      
     } catch (error) {
       console.log("로그인 실패:", error);
       Alert.alert(
