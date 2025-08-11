@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler ;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TodoNotFoundException.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleTodoNotFoundException(TodoNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
+    // 커스텀 LoginFailedException 처리 (401 Unauthorized)
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleLoginFailedException(LoginFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponseDTO.error(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
     }
 
     // 그 외 모든 예외 처리

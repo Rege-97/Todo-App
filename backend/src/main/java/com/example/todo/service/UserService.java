@@ -8,6 +8,7 @@ import com.example.todo.dto.request.TokenRefreshRequestDTO;
 import com.example.todo.dto.response.TokenResponseDTO;
 import com.example.todo.dto.response.UserResponseDTO;
 import com.example.todo.exception.DuplicateEmailException;
+import com.example.todo.exception.LoginFailedException;
 import com.example.todo.mapper.RefreshTokenMapper;
 import com.example.todo.mapper.UserMapper;
 import com.example.todo.security.CustomUserDetails;
@@ -59,7 +60,7 @@ public class UserService implements UserDetailsService {    // 인증 검증을 
         // 사용자 인증
         User user = userMapper.findByEmail(req.getEmail());
         if (user == null || !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
+            throw new LoginFailedException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
         // 액세스 토큰 생성
@@ -84,7 +85,7 @@ public class UserService implements UserDetailsService {    // 인증 검증을 
         }
 
         // 투 토큰을 모아서 반환
-        return new TokenResponseDTO(accessToken, refreshTokenString, "Bearer", 3600000L);
+        return new TokenResponseDTO(accessToken, refreshTokenString, "Bearer", jwtTokenProvider.getAccessTokenExpirationMs());
     }
 
     // 액세스 토큰 재발급 메서드
@@ -110,7 +111,7 @@ public class UserService implements UserDetailsService {    // 인증 검증을 
         String newAccessToken = jwtTokenProvider.generateAccessToekn(user.getId(), user.getEmail());
 
         // 반환
-        return new TokenResponseDTO(newAccessToken, refreshTokenString, "Bearer", 3600000L);
+        return new TokenResponseDTO(newAccessToken, refreshTokenString, "Bearer", jwtTokenProvider.getAccessTokenExpirationMs());
     }
 
     // 회원 디테일 정보 메서드
