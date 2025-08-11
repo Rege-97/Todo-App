@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 모든 �
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String token = getJwtFromRequest(request);  // 요청에서 토큰 추출
+            String token = getJwtFromRequest(request);  // 요청에서 Authorization 헤더에서 토큰 추출
 
             if (token != null && jwtTokenProvider.getSubject(token) != null) {    // 토큰 유효성 검사
                 String email = jwtTokenProvider.getSubject(token);

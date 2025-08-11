@@ -14,6 +14,13 @@
         WHERE email = #{email}
         LIMIT 1
     </select>
+    <select id="findById"
+            parameterType="long"
+            resultType="com.example.todo.domain.User">
+        SELECT id, email, password, created_at
+        FROM users
+        WHERE id = #{id}
+    </select>
 
     <insert id="insert"
             parameterType="com.example.todo.domain.User"

@@ -3,6 +3,7 @@ package com.example.todo.controller;
 import com.example.todo.common.ApiResponseDTO;
 import com.example.todo.dto.request.LoginRequestDTO;
 import com.example.todo.dto.request.RegisterRequestDTO;
+import com.example.todo.dto.request.TokenRefreshRequestDTO;
 import com.example.todo.dto.response.TokenResponseDTO;
 import com.example.todo.dto.response.UserResponseDTO;
 import com.example.todo.service.UserService;
@@ -52,5 +53,11 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO req) {
         TokenResponseDTO res = userService.login(req);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "로그인 성공", res));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO req) {
+        TokenResponseDTO res = userService.refreshAccessToken(req);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDTO.success(HttpStatus.OK.value(), "토큰 재발급 성공", res));
     }
 }
