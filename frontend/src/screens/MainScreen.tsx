@@ -13,10 +13,12 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import apiClient from "../api/client";
 
+type TodoStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
 interface Todo {
   id: number;
   title: string;
-  status: "TODO" | "IN_PROGRESS" | "DONE";
+  status: TodoStatus;
 }
 
 export default function MainScreen() {
@@ -80,6 +82,39 @@ export default function MainScreen() {
     ]);
   };
 
+  const handleToggleTodo = async (id: number, currentStatus: TodoStatus) => {
+    let newStatus: TodoStatus;
+    if (currentStatus === "TODO") {
+      newStatus = "IN_PROGRESS";
+    } else if (currentStatus === "IN_PROGRESS") {
+      newStatus = "DONE";
+    } else {
+      newStatus = "TODO";
+    }
+
+    try {
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === id ? { ...todo, status: newStatus } : todo
+        )
+      );
+
+      await apiClient(`/api/todos/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch (error) {
+      console.error("할 일 상태 변경에 실패했습니다.", error);
+      Alert.alert("오류", "상태 변경에 실패했습니다.");
+
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === id ? { ...todo, status: currentStatus } : todo
+        )
+      );
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -100,25 +135,38 @@ export default function MainScreen() {
         />
         <Button title="추가" onPress={handleAddTodo} />
       </View>
+
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.todoItem}>
-            <View style={styles.todoTextContainer}>
-              <Text style={styles.todoTitle}>{item.title}</Text>
-              <Text>상태: {item.status}</Text>
+          <TouchableOpacity
+            onPress={() => handleToggleTodo(item.id, item.status)}
+          >
+            <View style={styles.todoItem}>
+              <View style={styles.todoTextContainer}>
+                <Text
+                  style={[
+                    styles.todoTitle,
+                    item.status === "DONE" && styles.completed,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+                <Text>상태: {item.status}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteTodo(item.id)}
+              >
+                <Text style={styles.deleteButtonText}>삭제</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteTodo(item.id)}
-            >
-              <Text style={styles.deleteButtonText}>삭제</Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={<Text>할 일이 없습니다. 추가해주세요!</Text>}
       />
+
       <Button title="로그아웃" onPress={signOut} />
     </View>
   );
@@ -169,6 +217,10 @@ const styles = StyleSheet.create({
   todoTitle: {
     fontSize: 18,
     fontWeight: "500",
+  },
+  completed: {
+    textDecorationLine: "line-through", // 취소선
+    color: "#888", // 회색으로 변경
   },
   deleteButton: {
     backgroundColor: "#FF3B30",
