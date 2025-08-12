@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Button,
   FlatList,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,6 +22,7 @@ export default function MainScreen() {
   const { signOut } = useAuth();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newTodoTitle, setNewTodoTitle] = useState("");
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -36,6 +39,25 @@ export default function MainScreen() {
     fetchTodos();
   }, []);
 
+  const handleAddTodo = async () => {
+    if (!newTodoTitle.trim()) {
+      Alert.alert("오류", "할 일 내용을 입력해주세요.");
+      return;
+    }
+    try {
+      const response = await apiClient("/api/todos", {
+        method: "POST",
+        body: JSON.stringify({ title: newTodoTitle }),
+      });
+
+      setTodos([response.data, ...todos]);
+      setNewTodoTitle("");
+    } catch (error) {
+      console.error("할 일 추가에 실패했습니다.", error);
+      Alert.alert("오류", "할 일 추가에 실패했습니다.");
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -47,6 +69,15 @@ export default function MainScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>나의 할 일 목록</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="새로운 할 일을 입력하세요..."
+          value={newTodoTitle}
+          onChangeText={setNewTodoTitle}
+        />
+        <Button title="추가" onPress={handleAddTodo}/>
+      </View>
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
@@ -77,7 +108,21 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    marginTop: 20, // inputContainer와의 간격
     textAlign: "center",
+  },
+  inputContainer: {
+    flexDirection: "row", // 아이템을 가로로 배치
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1, // 남은 공간을 모두 차지
+    height: 40,
+    borderColor: "#CCCCCC",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginRight: 10, // 버튼과의 간격
   },
   todoItem: {
     backgroundColor: "#f9f9f9",
