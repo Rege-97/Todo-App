@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import apiClient from "../api/client";
+import TodoItem from "../components/TodoItem";
 
 type TodoStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
@@ -140,29 +141,11 @@ export default function MainScreen() {
         data={todos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => handleToggleTodo(item.id, item.status)}
-          >
-            <View style={styles.todoItem}>
-              <View style={styles.todoTextContainer}>
-                <Text
-                  style={[
-                    styles.todoTitle,
-                    item.status === "DONE" && styles.completed,
-                  ]}
-                >
-                  {item.title}
-                </Text>
-                <Text>상태: {item.status}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteTodo(item.id)}
-              >
-                <Text style={styles.deleteButtonText}>삭제</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
+          <TodoItem
+            item={item}
+            onToggle={handleToggleTodo}
+            onDelete={handleDeleteTodo}
+          />
         )}
         ListEmptyComponent={<Text>할 일이 없습니다. 추가해주세요!</Text>}
       />
@@ -175,7 +158,8 @@ export default function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#F5F5F5", // 배경색 변경
+    padding: 15,
   },
   centered: {
     flex: 1,
@@ -183,53 +167,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 20,
+    marginTop: 10,
     textAlign: "center",
   },
   inputContainer: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   input: {
     flex: 1,
-    height: 40,
-    borderColor: "#CCCCCC",
+    backgroundColor: "white",
+    height: 45,
+    borderColor: "#E0E0E0",
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
     marginRight: 10,
+    fontSize: 16,
   },
-  todoItem: {
-    backgroundColor: "#f9f9f9",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    flexDirection: "row", // 가로 배치
-    justifyContent: "space-between", // 양쪽 끝으로 정렬
-    alignItems: "center", // 세로 중앙 정렬
-  },
-  todoTextContainer: {
-    flex: 1, // 텍스트 영역이 남은 공간을 모두 차지하도록
-  },
-  todoTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-  },
-  completed: {
-    textDecorationLine: "line-through", // 취소선
-    color: "#888", // 회색으로 변경
-  },
-  deleteButton: {
-    backgroundColor: "#FF3B30",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: "white",
-    fontWeight: "bold",
+  emptyText: {
+    textAlign: "center",
+    marginTop: 50,
+    fontSize: 16,
+    color: "#888",
   },
 });
