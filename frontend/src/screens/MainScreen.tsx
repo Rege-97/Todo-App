@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
@@ -58,6 +59,27 @@ export default function MainScreen() {
     }
   };
 
+  const handleDeleteTodo = (id: number) => {
+    Alert.alert("삭제 확인", "정말로 이 할일을 삭제하시겠습니까?", [
+      { text: "아니오", style: "cancel" },
+      {
+        text: "삭제",
+        onPress: async () => {
+          try {
+            await apiClient(`/api/todos/${id}`, {
+              method: "DELETE",
+            });
+            setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+          } catch (error) {
+            console.log("할 일 삭제에 실패했습니다.");
+            Alert.alert("오류", "할 일 삭제에 실패했습니다.");
+          }
+        },
+        style: "destructive",
+      },
+    ]);
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -76,15 +98,23 @@ export default function MainScreen() {
           value={newTodoTitle}
           onChangeText={setNewTodoTitle}
         />
-        <Button title="추가" onPress={handleAddTodo}/>
+        <Button title="추가" onPress={handleAddTodo} />
       </View>
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.todoItem}>
-            <Text style={styles.todoTitle}>{item.title}</Text>
-            <Text>상태: {item.status}</Text>
+            <View style={styles.todoTextContainer}>
+              <Text style={styles.todoTitle}>{item.title}</Text>
+              <Text>상태: {item.status}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteTodo(item.id)}
+            >
+              <Text style={styles.deleteButtonText}>삭제</Text>
+            </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={<Text>할 일이 없습니다. 추가해주세요!</Text>}
@@ -108,30 +138,46 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 20, // inputContainer와의 간격
+    marginTop: 20,
     textAlign: "center",
   },
   inputContainer: {
-    flexDirection: "row", // 아이템을 가로로 배치
+    flexDirection: "row",
     marginBottom: 20,
   },
   input: {
-    flex: 1, // 남은 공간을 모두 차지
+    flex: 1,
     height: 40,
     borderColor: "#CCCCCC",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
-    marginRight: 10, // 버튼과의 간격
+    marginRight: 10,
   },
   todoItem: {
     backgroundColor: "#f9f9f9",
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
+    flexDirection: "row", // 가로 배치
+    justifyContent: "space-between", // 양쪽 끝으로 정렬
+    alignItems: "center", // 세로 중앙 정렬
+  },
+  todoTextContainer: {
+    flex: 1, // 텍스트 영역이 남은 공간을 모두 차지하도록
   },
   todoTitle: {
     fontSize: 18,
     fontWeight: "500",
+  },
+  deleteButton: {
+    backgroundColor: "#FF3B30",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
