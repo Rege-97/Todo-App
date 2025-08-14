@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://172.30.1.99:8080";
+const API_URL = "http://172.30.1.55:8080";
 
 const refreshAccessToken = async (): Promise<string | null> => {
   const refreshToken = await AsyncStorage.getItem("refreshToken");

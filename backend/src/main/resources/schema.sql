@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS refresh_tokens;
-DROP TABLE IF EXISTS todos;
-DROP TABLE IF EXISTS users;
 
 -- == 회원 테이블 ==
 -- 앱 사용자의 기본 정보를 저장합니다.

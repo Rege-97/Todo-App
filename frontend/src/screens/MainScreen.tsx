@@ -13,6 +13,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import apiClient from "../api/client";
 import TodoItem from "../components/TodoItem";
+import { MaterialIcons } from "@expo/vector-icons";
+import TodoModal from "../components/TodoModal";
 
 type TodoStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
@@ -26,7 +28,7 @@ export default function MainScreen() {
   const { signOut } = useAuth();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -43,21 +45,17 @@ export default function MainScreen() {
     fetchTodos();
   }, []);
 
-  const handleAddTodo = async () => {
-    if (!newTodoTitle.trim()) {
-      Alert.alert("오류", "할 일 내용을 입력해주세요.");
-      return;
-    }
+  const handleAddTodo = async (title: string) => {
     try {
       const response = await apiClient("/api/todos", {
         method: "POST",
-        body: JSON.stringify({ title: newTodoTitle }),
+        body: JSON.stringify({ title }),
       });
 
       setTodos([response.data, ...todos]);
-      setNewTodoTitle("");
+      setModalVisible(false);
     } catch (error) {
-      console.error("할 일 추가에 실패했습니다.", error);
+      console.error("할 일 추가 실패:", error);
       Alert.alert("오류", "할 일 추가에 실패했습니다.");
     }
   };
@@ -118,7 +116,7 @@ export default function MainScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -126,15 +124,9 @@ export default function MainScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>나의 할 일 목록</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="새로운 할 일을 입력하세요..."
-          value={newTodoTitle}
-          onChangeText={setNewTodoTitle}
-        />
-        <Button title="추가" onPress={handleAddTodo} />
+      <View style={styles.header}>
+        <Text style={styles.title}>나의 할 일 목록</Text>
+        <Button title="로그아웃" onPress={signOut} />
       </View>
 
       <FlatList
@@ -147,10 +139,21 @@ export default function MainScreen() {
             onDelete={handleDeleteTodo}
           />
         )}
-        ListEmptyComponent={<Text>할 일이 없습니다. 추가해주세요!</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>할 일이 없습니다. 추가해주세요!</Text>
+        }
       />
-
-      <Button title="로그아웃" onPress={signOut} />
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setModalVisible(true)}
+      >
+        <MaterialIcons name="add" size={24} color="white" />
+      </TouchableOpacity>
+      <TodoModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={handleAddTodo}
+      />
     </View>
   );
 }
@@ -158,40 +161,36 @@ export default function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5", // 배경색 변경
-    padding: 15,
+    backgroundColor: "#F5F5F5",
   },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
+  header: {
+    padding: 15,
+    paddingTop: 40, // 상태바 영역 확보
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "white",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: 10,
-    textAlign: "center",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    marginBottom: 15,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "white",
-    height: 45,
-    borderColor: "#E0E0E0",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginRight: 10,
-    fontSize: 16,
   },
   emptyText: {
     textAlign: "center",
     marginTop: 50,
     fontSize: 16,
     color: "#888",
+  },
+  fab: {
+    position: "absolute", // 화면 위에 떠 있도록
+    right: 20,
+    bottom: 20,
+    backgroundColor: "#007BFF",
+    width: 60,
+    height: 60,
+    borderRadius: 30, // 원형으로 만들기
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8, // 그림자 효과
   },
 });
