@@ -37,46 +37,45 @@ export default function MainScreen() {
 
   const [searchKeyword, setSearchKeyword] = useState("");
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const dedupeById = (list: Todo[]) => {
     const map = new Map<number, Todo>();
     for (const t of list) map.set(t.id, t);
     return Array.from(map.values());
   };
 
-  const fetchTodos = useCallback(
-    async (page: number, keyword: string) => {
-      if (page > 1 && isFetchingMore) {
-        return;
-      }
+  const fetchTodos = useCallback(async (page: number, keyword: string) => {
+    if (page > 1 && isFetchingMore) {
+      return;
+    }
+    if (page === 1) {
+      setIsLoading(true);
+    } else {
+      setIsFetchingMore(true);
+    }
+
+    try {
+      const response = await apiClient(
+        `/api/todos?page=${page}&size=10&keyword=${keyword}`
+      );
+      const fetchedTodos = response.data.data;
+      const pageInfo = response.data.pageInfo;
+
       if (page === 1) {
-        setIsLoading(true);
+        setTodos(dedupeById(fetchedTodos));
       } else {
-        setIsFetchingMore(true);
+        setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchedTodos]));
       }
-
-      try {
-        const response = await apiClient(
-          `/api/todos?page=${page}&size=10&keyword=${keyword}`
-        );
-        const fetchedTodos = response.data.data;
-        const pageInfo = response.data.pageInfo;
-
-        if (page === 1) {
-          setTodos(dedupeById(fetchedTodos));
-        } else {
-          setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchedTodos]));
-        }
-        setTotalPages(pageInfo.totalPages);
-        setCurrentPage(page);
-      } catch (error) {
-        console.error("할 일 목록을 불러오는데 실패했습니다.", error);
-      } finally {
-        setIsLoading(false);
-        setIsFetchingMore(false);
-      }
-    },
-    []
-  );
+      setTotalPages(pageInfo.totalPages);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("할 일 목록을 불러오는데 실패했습니다.", error);
+    } finally {
+      setIsLoading(false);
+      setIsFetchingMore(false);
+    }
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -207,6 +206,12 @@ export default function MainScreen() {
     return <ActivityIndicator style={{ marginVertical: 20 }} />;
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchTodos(1, searchKeyword);
+    setIsRefreshing(false);
+  };
+
   if (isLoading) {
     return (
       <View>
@@ -244,6 +249,8 @@ export default function MainScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
+        onRefresh={handleRefresh}
+        refreshing={isRefreshing}
       />
       <TouchableOpacity
         style={styles.fab}
