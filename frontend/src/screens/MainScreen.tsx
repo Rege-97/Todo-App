@@ -15,6 +15,7 @@ import apiClient from "../api/client";
 import TodoItem from "../components/TodoItem";
 import { MaterialIcons } from "@expo/vector-icons";
 import TodoModal from "../components/TodoModal";
+import DateFilter from "../components/DateFilter";
 
 type TodoStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
@@ -39,59 +40,79 @@ export default function MainScreen() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [dateFilter, setDateFilter] = useState<{
+    startDate: string | null;
+    endDate: string | null;
+  }>({
+    startDate: null,
+    endDate: null,
+  });
+
   const dedupeById = (list: Todo[]) => {
     const map = new Map<number, Todo>();
     for (const t of list) map.set(t.id, t);
     return Array.from(map.values());
   };
 
-  const fetchTodos = useCallback(async (page: number, keyword: string) => {
-    if (page > 1 && isFetchingMore) {
-      return;
-    }
-    if (page === 1) {
-      setIsLoading(true);
-    } else {
-      setIsFetchingMore(true);
-    }
-
-    try {
-      const response = await apiClient(
-        `/api/todos?page=${page}&size=10&keyword=${keyword}`
-      );
-      const fetchedTodos = response.data.data;
-      const pageInfo = response.data.pageInfo;
-
-      if (page === 1) {
-        setTodos(dedupeById(fetchedTodos));
-      } else {
-        setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchedTodos]));
+  const fetchTodos = useCallback(
+    async (page: number, keyword: string, dates: typeof dateFilter) => {
+      if (page > 1 && isFetchingMore) {
+        return;
       }
-      setTotalPages(pageInfo.totalPages);
-      setCurrentPage(page);
-    } catch (error) {
-      console.error("할 일 목록을 불러오는데 실패했습니다.", error);
-    } finally {
-      setIsLoading(false);
-      setIsFetchingMore(false);
-    }
-  }, []);
+      if (page === 1) {
+        setIsLoading(true);
+      } else {
+        setIsFetchingMore(true);
+      }
+
+      try {
+        let url = `/api/todos?page=${page}&size=10&keyword=${keyword}`;
+        if (dates.startDate) url += `&startDate=${dates.startDate}`;
+        if (dates.endDate) url += `&endDate=${dates.endDate}`;
+
+        const response = await apiClient(url);
+        const fetchedTodos = response.data.data;
+        const pageInfo = response.data.pageInfo;
+
+        if (page === 1) {
+          setTodos(dedupeById(fetchedTodos));
+        } else {
+          setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchedTodos]));
+        }
+        setTotalPages(pageInfo.totalPages);
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("할 일 목록을 불러오는데 실패했습니다.", error);
+      } finally {
+        setIsLoading(false);
+        setIsFetchingMore(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchTodos(1, searchKeyword);
+      fetchTodos(1, searchKeyword, dateFilter);
     }, 500);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [searchKeyword, fetchTodos]);
+  }, [searchKeyword, fetchTodos, dateFilter]);
 
   const handleLoadMore = () => {
     if (currentPage < totalPages && !isFetchingMore) {
       const nextPage = currentPage + 1;
-      fetchTodos(nextPage, searchKeyword);
+      fetchTodos(nextPage, searchKeyword, dateFilter);
     }
+  };
+
+  const handleApplyDateFilter = (
+    startDate: string | null,
+    endDate: string | null
+  ) => {
+    setDateFilter({ startDate, endDate });
   };
 
   const handleAddTodo = async (title: string) => {
@@ -208,7 +229,7 @@ export default function MainScreen() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchTodos(1, searchKeyword);
+    await fetchTodos(1, searchKeyword, dateFilter);
     setIsRefreshing(false);
   };
 
@@ -232,6 +253,7 @@ export default function MainScreen() {
         value={searchKeyword}
         onChangeText={setSearchKeyword}
       />
+      <DateFilter onApply={handleApplyDateFilter} />
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
@@ -304,14 +326,21 @@ const styles = StyleSheet.create({
     elevation: 8, // 그림자 효과
   },
   searchInput: {
+    flex: 1, // 남은 공간 차지
+    marginRight: 10, // 필터 버튼과의 간격
     backgroundColor: "white",
-    height: 45,
+    height: 40,
     borderColor: "#E0E0E0",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 20,
     paddingHorizontal: 15,
-    marginHorizontal: 15,
+    fontSize: 14,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 15,
     marginBottom: 10,
-    fontSize: 16,
   },
 });
