@@ -29,6 +29,7 @@ export default function MainScreen() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editngTodo, setEditingTodo] = useState<Todo | null>(null);
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -79,6 +80,42 @@ export default function MainScreen() {
         style: "destructive",
       },
     ]);
+  };
+
+  const handleUpdateTodo = async (title: string) => {
+    if (!editngTodo) {
+      return;
+    }
+    try {
+      const response = await apiClient(`/api/todos/${editngTodo.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ title }),
+      });
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === editngTodo.id ? response.data : todo
+        )
+      );
+      closeModal();
+    } catch (error) {
+      console.error("할 일 수정 실패: ", error);
+      Alert.alert("오류", "할 일 수정에 실패했습니다.");
+    }
+  };
+
+  const handleOpenEditModal = (todo: Todo) => {
+    setEditingTodo(todo);
+    setModalVisible(true);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingTodo(null);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setEditingTodo(null);
   };
 
   const handleToggleTodo = async (id: number, currentStatus: TodoStatus) => {
@@ -137,6 +174,7 @@ export default function MainScreen() {
             item={item}
             onToggle={handleToggleTodo}
             onDelete={handleDeleteTodo}
+            onEdit={handleOpenEditModal}
           />
         )}
         ListEmptyComponent={
@@ -151,8 +189,9 @@ export default function MainScreen() {
       </TouchableOpacity>
       <TodoModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleAddTodo}
+        onClose={closeModal}
+        onSubmit={editngTodo ? handleUpdateTodo : handleAddTodo}
+        initialValue={editngTodo ? editngTodo.title : ""}
       />
     </View>
   );
