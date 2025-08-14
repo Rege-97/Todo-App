@@ -1,6 +1,14 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { RootStackParamList } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
@@ -73,6 +81,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         secureTextEntry
       />
       <Button title="로그인하기" onPress={handleLogin} />
+      <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
+        <Text style={styles.linkText}>아직 계정이 없으신가요? 회원가입</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -97,5 +108,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: 16,
     marginBottom: 15, // 입력창 사이의 간격
+  },
+  linkText: {
+    color: "#007BFF",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
