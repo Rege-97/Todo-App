@@ -29,22 +29,60 @@ export default function MainScreen() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editngTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isFetchingMore, setIsFetchMore] = useState(false);
+
+  const dedupeById = (list: Todo[]) => {
+    const map = new Map<number, Todo>();
+    for (const t of list) map.set(t.id, t);
+    return Array.from(map.values());
+  };
+
+  const fetchTodos = async (page: number) => {
+    if (isFetchingMore) {
+      return;
+    }
+
+    if (page === 1) {
+      setIsLoading(true);
+    } else {
+      setIsFetchMore(true);
+    }
+
+    try {
+      const response = await apiClient(`/api/todos?page=${page}&size=10`);
+      const fetchTodos = response.data.data;
+      const pageInfo = response.data.pageInfo;
+
+      if (page === 1) {
+        setTodos(dedupeById(fetchTodos));
+      } else {
+        setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchTodos]));
+      }
+      setTotalPages(pageInfo.totalPages);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("할 일 목록을 불러오는데 실패했습니다.", error);
+    } finally {
+      setIsLoading(false);
+      setIsFetchMore(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const response = await apiClient("/api/todos");
-        setTodos(response.data.data);
-      } catch (error) {
-        console.error("할 일 목록을 불러오는데 실패했습니다.", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTodos();
+    fetchTodos(1);
   }, []);
+
+  const handleLoadMore = () => {
+    if (currentPage < totalPages && !isFetchingMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchTodos(nextPage);
+    }
+  };
 
   const handleAddTodo = async (title: string) => {
     try {
@@ -83,17 +121,17 @@ export default function MainScreen() {
   };
 
   const handleUpdateTodo = async (title: string) => {
-    if (!editngTodo) {
+    if (!editingTodo) {
       return;
     }
     try {
-      const response = await apiClient(`/api/todos/${editngTodo.id}`, {
+      const response = await apiClient(`/api/todos/${editingTodo.id}`, {
         method: "PUT",
         body: JSON.stringify({ title }),
       });
       setTodos((prevTodos) =>
         prevTodos.map((todo) =>
-          todo.id === editngTodo.id ? response.data : todo
+          todo.id === editingTodo.id ? response.data : todo
         )
       );
       closeModal();
@@ -151,6 +189,13 @@ export default function MainScreen() {
     }
   };
 
+  const renderFooter = () => {
+    if (!isFetchingMore) {
+      return null;
+    }
+    return <ActivityIndicator style={{ marginVertical: 20 }} />;
+  };
+
   if (isLoading) {
     return (
       <View>
@@ -180,6 +225,9 @@ export default function MainScreen() {
         ListEmptyComponent={
           <Text style={styles.emptyText}>할 일이 없습니다. 추가해주세요!</Text>
         }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
       />
       <TouchableOpacity
         style={styles.fab}
@@ -190,8 +238,8 @@ export default function MainScreen() {
       <TodoModal
         visible={modalVisible}
         onClose={closeModal}
-        onSubmit={editngTodo ? handleUpdateTodo : handleAddTodo}
-        initialValue={editngTodo ? editngTodo.title : ""}
+        onSubmit={editingTodo ? handleUpdateTodo : handleAddTodo}
+        initialValue={editingTodo ? editingTodo.title : ""}
       />
     </View>
   );
