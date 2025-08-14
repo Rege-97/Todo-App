@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,7 +33,9 @@ export default function MainScreen() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isFetchingMore, setIsFetchMore] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const dedupeById = (list: Todo[]) => {
     const map = new Map<number, Todo>();
@@ -41,46 +43,55 @@ export default function MainScreen() {
     return Array.from(map.values());
   };
 
-  const fetchTodos = async (page: number) => {
-    if (isFetchingMore) {
-      return;
-    }
-
-    if (page === 1) {
-      setIsLoading(true);
-    } else {
-      setIsFetchMore(true);
-    }
-
-    try {
-      const response = await apiClient(`/api/todos?page=${page}&size=10`);
-      const fetchTodos = response.data.data;
-      const pageInfo = response.data.pageInfo;
-
-      if (page === 1) {
-        setTodos(dedupeById(fetchTodos));
-      } else {
-        setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchTodos]));
+  const fetchTodos = useCallback(
+    async (page: number, keyword: string) => {
+      if (page > 1 && isFetchingMore) {
+        return;
       }
-      setTotalPages(pageInfo.totalPages);
-      setCurrentPage(page);
-    } catch (error) {
-      console.error("할 일 목록을 불러오는데 실패했습니다.", error);
-    } finally {
-      setIsLoading(false);
-      setIsFetchMore(false);
-    }
-  };
+      if (page === 1) {
+        setIsLoading(true);
+      } else {
+        setIsFetchingMore(true);
+      }
+
+      try {
+        const response = await apiClient(
+          `/api/todos?page=${page}&size=10&keyword=${keyword}`
+        );
+        const fetchedTodos = response.data.data;
+        const pageInfo = response.data.pageInfo;
+
+        if (page === 1) {
+          setTodos(dedupeById(fetchedTodos));
+        } else {
+          setTodos((prevTodos) => dedupeById([...prevTodos, ...fetchedTodos]));
+        }
+        setTotalPages(pageInfo.totalPages);
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("할 일 목록을 불러오는데 실패했습니다.", error);
+      } finally {
+        setIsLoading(false);
+        setIsFetchingMore(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    fetchTodos(1);
-  }, []);
+    const handler = setTimeout(() => {
+      fetchTodos(1, searchKeyword);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchKeyword, fetchTodos]);
 
   const handleLoadMore = () => {
     if (currentPage < totalPages && !isFetchingMore) {
       const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      fetchTodos(nextPage);
+      fetchTodos(nextPage, searchKeyword);
     }
   };
 
@@ -210,7 +221,12 @@ export default function MainScreen() {
         <Text style={styles.title}>나의 할 일 목록</Text>
         <Button title="로그아웃" onPress={signOut} />
       </View>
-
+      <TextInput
+        style={styles.searchInput}
+        placeholder="할 일 검색..."
+        value={searchKeyword}
+        onChangeText={setSearchKeyword}
+      />
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
@@ -279,5 +295,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 8, // 그림자 효과
+  },
+  searchInput: {
+    backgroundColor: "white",
+    height: 45,
+    borderColor: "#E0E0E0",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    fontSize: 16,
   },
 });
